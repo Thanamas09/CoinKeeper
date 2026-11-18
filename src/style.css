@@ -26,3 +26,4 @@
 .ledger-title{margin:18px 0 8px}
 @media(max-width:600px){.account-detail,.account-total{padding:15px}.account-card{grid-template-columns:auto 1fr auto}.account-actions button{white-space:normal}}
 @media(max-width:420px){.page-heading{align-items:flex-start;flex-wrap:wrap;gap:8px}.account-card strong{grid-column:2}.account-card{grid-template-columns:auto minmax(0,1fr)}}
+.entry-description{min-width:110px;max-width:240px;overflow-wrap:anywhere;color:inherit}

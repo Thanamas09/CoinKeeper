@@ -194,7 +194,7 @@ export function AccountsPage({data,save,ready,busy,openEntry,openTransfer}:{data
       {history.map(({item,label,value,edit}) => <div className="ledger-row" key={('from' in item ? 't' : 'e')+item.id}>
         <span>{label}<small className="muted">{dateLabel(item.date)} · {'from' in item
           ? item.from.accountId === item.to.accountId ? 'ย้ายกระเป๋า' : 'โอนเงิน'
-          : data.categories.find(c => c.id === item.categoryId)?.name}{item.note && ' · '+item.note}</small></span>
+          : data.categories.find(c => c.id === item.categoryId)?.name}{'description' in item && item.description && ' · '+item.description}{item.note && ' · '+item.note}</small></span>
         <b>{value}</b><button className="text-button" onClick={edit}>ดู / แก้ไข</button>
       </div>)}
       {!history.length && <p className="help">ยังไม่มีรายการในบัญชีนี้</p>}
@@ -203,7 +203,7 @@ export function AccountsPage({data,save,ready,busy,openEntry,openTransfer}:{data
       <h2>{legacyLabel}</h2><p className="help">รายการเหล่านี้ยังรวมในรายงานรายเดือน เลือกรายการเพื่อดูผลต่อยอดเงินจริงก่อนผูกบัญชี</p>
       {!data.accounts.some(a => !a.archived) && <p className="help">เพิ่มบัญชีที่ใช้งานก่อนผูกรายการ</p>}
       {legacy.map(e => <div className="ledger-row" key={e.id}>
-        <span>{data.categories.find(c => c.id === e.categoryId)?.name}<small className="muted">{dateLabel(e.date)}{e.note && ' · '+e.note}</small></span>
+        <span>{data.categories.find(c => c.id === e.categoryId)?.name}<small className="muted">{dateLabel(e.date)}{e.description && ' · '+e.description}{e.note && ' · '+e.note}</small></span>
         <b>{money(e.type === 'expense' ? -e.amount : e.amount)}</b>
         <button className="text-button" disabled={!data.accounts.some(a => !a.archived)} onClick={() => openEntry(e)}>เลือกบัญชี</button>
       </div>)}

@@ -1,4 +1,4 @@
-﻿import {openDB} from 'idb';
+import {openDB} from 'idb';
 
 export type Kind = 'income' | 'expense';
 export type Category = {id:string; name:string; type:Kind};
@@ -6,7 +6,7 @@ export type Location = {accountId:string; walletId?:string};
 export type Account = {id:string; name:string; color:string; opening:number; wallets:boolean; archived?:boolean};
 export type Pocket = {id:string; accountId:string; name:string; categoryId?:string; archived?:boolean};
 type Movement = {id:string; amount:number; date:string; note:string};
-export type Entry = Movement & {categoryId:string; type:Kind; accountId?:string; walletId?:string};
+export type Entry = Movement & {categoryId:string; type:Kind; description?:string; accountId?:string; walletId?:string};
 export type Transfer = Movement & {from:Location; to:Location};
 export type Data = {
   version:2; categories:Category[]; entries:Entry[]; budgets:Record<string,number>;
@@ -133,11 +133,12 @@ export function validate(raw:unknown):Data {
   }
   const entries = source.entries.map(e => {
     if (!e) invalid();
-    const {id,amount,categoryId,date,note,type,accountId,walletId} = e;
-    return {id,amount,categoryId,date,note,type,...(!legacy && accountId !== undefined ? {accountId} : {}),
+    const {id,amount,categoryId,date,note,type,description,accountId,walletId} = e;
+    return {id,amount,categoryId,date,note,type,...(description !== undefined ? {description} : {}),...(!legacy && accountId !== undefined ? {accountId} : {}),
       ...(!legacy && walletId !== undefined ? {walletId} : {})};
   });
-  index(entries,e => validMovement(e) && isKind(e.type) && categoryMap.get(e.categoryId)?.type === e.type
+  index(entries,e => validMovement(e) && (e.description === undefined || (typeof e.description === 'string' && e.description.length <= 160))
+    && isKind(e.type) && categoryMap.get(e.categoryId)?.type === e.type
     && (e.accountId === undefined ? e.walletId === undefined : validLocation({accountId:e.accountId,walletId:e.walletId})));
   index(transfers,t => validMovement(t) && validLocation(t.from) && validLocation(t.to) && !sameLocation(t.from,t.to));
   for (const [k,v] of Object.entries(budgets)) if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(k) || !validAmount(v)) invalid();
@@ -222,11 +223,11 @@ export function csv(data:Data, entries=data.entries, transfers=data.transfers) {
     return a ? [a.name, a.wallets ? data.wallets.find(w => w.id === p?.walletId)?.name ?? unallocated : ''] : ['',''];
   };
   const rows = [
-    ['วันที่','ประเภท','หมวดหมู่','จำนวนเงิน (บาท)','บันทึก','บัญชี','กระเป๋า','บัญชีต้นทาง','กระเป๋าต้นทาง','บัญชีปลายทาง','กระเป๋าปลายทาง'],
+    ['วันที่','ประเภท','หมวดหมู่','จำนวนเงิน (บาท)','บันทึก','บัญชี','กระเป๋า','บัญชีต้นทาง','กระเป๋าต้นทาง','บัญชีปลายทาง','กระเป๋าปลายทาง','รายการ'],
     ...entries.map(e => [e.date,e.type === 'income' ? 'รายรับ' : 'รายจ่าย',data.categories.find(c=>c.id===e.categoryId)?.name ?? '',
-      decimal(e.amount),e.note,...(e.accountId ? location({accountId:e.accountId,walletId:e.walletId}) : [legacyLabel,'']),'','','','']),
+      decimal(e.amount),e.note,...(e.accountId ? location({accountId:e.accountId,walletId:e.walletId}) : [legacyLabel,'']),'','','','',e.description ?? '']),
     ...transfers.map(t => [t.date,t.from.accountId === t.to.accountId ? 'ย้ายเงินระหว่างกระเป๋า' : 'โอนเงิน','',
-      decimal(t.amount),t.note,'','',...location(t.from),...location(t.to)]),
+      decimal(t.amount),t.note,'','',...location(t.from),...location(t.to),'']),
   ];
   return '\uFEFF'+rows.map(row => row.map(cell).join(',')).join('\r\n');
 }
