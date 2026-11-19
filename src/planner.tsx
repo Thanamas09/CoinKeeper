@@ -37,8 +37,9 @@ export function Planner({data,ready,openAccounts}:{data:Data;ready:boolean;openA
   const sources=active.map(account=>{
     const balance=current.accounts.get(account.id)??0;
     const limit=parseAmount(caps[account.id]??'')??balance;
-    return {account,limit,error:Number.isNaN(limit)?amountError:limit>balance?'วงเงินเกินยอดบัญชี':''};
+    return {balance,limit,error:Number.isNaN(limit)?amountError:limit>balance?'วงเงินเกินยอดบัญชี':''};
   });
+  const selectedBalance=sources.reduce((sum,source)=>sum+source.balance,0);
   const plan=active.length&&daysValid&&!Number.isNaN(targetAmount)&&sources.every(s=>!s.error)
     ?calculatePlan(sources.map(s=>s.limit),targetAmount,Number(days)):null;
 
@@ -84,12 +85,15 @@ export function Planner({data,ready,openAccounts}:{data:Data;ready:boolean;openA
     <section className="panel planner-result">
       <h2>ผลคำนวณ</h2>
       <div aria-live="polite">
-        {plan?<><div className="planner-daily">
+        {plan&&<div className="planner-daily">
           <span>ใช้ได้เฉลี่ยต่อวัน</span><strong>{money(plan.daily)}</strong>
           <small>สำหรับ {Number(days)} วัน · ปัดลงเป็นสตางค์</small>
-        </div>
+        </div>}
+        {active.length>0&&<dl className="planner-breakdown">
+          <div><dt>ยอดรวมบัญชีที่เลือก</dt><dd>{money(selectedBalance)}</dd></div>
+        </dl>}
+        {plan?<>
         <dl className="planner-breakdown">
-          <div><dt>วงเงินรวมที่เลือก</dt><dd>{money(plan.available)}</dd></div>
           <div><dt>ใช้ได้ตามแผน</dt><dd>{money(plan.funded)}</dd></div>
           {plan.shortfall>0&&<div className="expense"><dt>ขาดจากเป้าหมาย</dt><dd>{money(plan.shortfall)}</dd></div>}
         </dl>
