@@ -1,6 +1,6 @@
 import {useState, type FormEvent, type ReactNode} from 'react';
-import {ArrowRightLeft, Plus, Wallet, X} from 'lucide-react';
-import {balances, cents, dateLabel, decimal, legacyLabel, locationLabel, money, sameLocation, today, unallocated,
+import {ArrowRightLeft, Plus, Trash2, Wallet, X} from 'lucide-react';
+import {balances, cents, dateLabel, decimal, legacyLabel, locationLabel, money, removeAccount, removeWallet, sameLocation, today, unallocated,
   type Account, type Data, type Entry, type Location, type Pocket, type Transfer} from './data';
 
 export function LocationFields({data,value,onChange,label='บัญชี',allowed,required=true}:{data:Data;value?:Location;
@@ -92,7 +92,7 @@ function AccountForm({item,canDisable,commit}:{item?:Account;canDisable:boolean;
     <label className="field">ยอดตั้งต้น (บาท)<input required inputMode="decimal" value={opening} onChange={e => setOpening(e.target.value)}/></label>
     <p className="help">ถ้าจะผูกรายการย้อนหลัง ให้ใช้ยอดก่อนรายการแรกที่จะผูก หากเริ่มจากยอดเงินจริงวันนี้ ให้ผูกเฉพาะรายการที่ยังไม่ได้สะท้อนในยอดนั้น เพื่อเลี่ยงการนับซ้ำ</p>
     <label className="radio"><input type="checkbox" checked={wallets} disabled={!canDisable} onChange={e => setWallets(e.target.checked)}/> ใช้กระเป๋าย่อยในบัญชีนี้</label>
-    {!canDisable && <p className="help">ลบกระเป๋าย่อยที่ไม่มีประวัติและมียอดเป็นศูนย์ทั้งหมดก่อนปิดการใช้กระเป๋า</p>}
+    {!canDisable && <p className="help">ลบกระเป๋าย่อยทั้งหมดก่อนปิดการใช้กระเป๋า</p>}
     <button className="primary full">บันทึกบัญชี</button>
   </form>;
 }
@@ -143,23 +143,30 @@ export function AccountsPage({data,save,ready,busy,openEntry,openTransfer}:{data
     } catch (e) {setFormError((e as Error).message)}
   }
   function accountActions(a:Account) {
-    const hasHistory = entries.length > 0 || transfers.length > 0 || wallets.length > 0;
     return <>
       <button className="secondary" onClick={() => show({type:'account',item:a})}>แก้ไขบัญชี</button>
       <button className="secondary" disabled={busy} onClick={() => save({...data,accounts:data.accounts.map(x => x.id === a.id ? {...x,archived:!x.archived} : x)})}>{a.archived ? 'เปิดใช้งานอีกครั้ง' : 'เก็บถาวร'}</button>
-      {!hasHistory && current.accounts.get(a.id) === 0 && <button className="text-button danger" disabled={busy} onClick={() => {
-        if (confirm(`ลบบัญชี “${a.name}” ใช่ไหม?`)) void save({...data,accounts:data.accounts.filter(x => x.id !== a.id)});
-      }}>ลบบัญชี</button>}
+      <button className="text-button danger" disabled={busy} onClick={async () => {
+        const details = [
+          `ยอด ${money(current.accounts.get(a.id) ?? 0)} จะถูกนำออกจากบัญชีที่ติดตาม`,
+          wallets.length ? `กระเป๋าย่อย ${wallets.length} ใบจะถูกลบด้วย` : '',
+          entries.length ? `รายรับและรายจ่าย ${entries.length} รายการจะยังอยู่ในรายงาน แต่จะถูกยกเลิกการผูกบัญชี` : '',
+          transfers.length ? `ประวัติโอนและย้ายเงิน ${transfers.length} รายการจะถูกลบ ซึ่งอาจเปลี่ยนยอดบัญชีอื่น` : '',
+        ].filter(Boolean);
+        if (confirm([`ลบบัญชี “${a.name}” ใช่ไหม?`, ...details].join('\n'))
+          && await save(removeAccount(data,a.id))) setSelected(value => value === a.id ? '' : value);
+      }}><Trash2 size={15}/> ลบบัญชี</button>
     </>;
   }
   function walletActions(w:Pocket) {
-    const hasHistory = entries.some(e => e.walletId === w.id) || transfers.some(t => t.from.walletId === w.id || t.to.walletId === w.id);
     return <>
       <button className="text-button" onClick={() => show({type:'wallet',item:w})}>แก้ไข</button>
       <button className="text-button" disabled={busy} onClick={() => save({...data,wallets:data.wallets.map(x => x.id === w.id ? {...x,archived:!x.archived} : x)})}>{w.archived ? 'เปิดใช้งาน' : 'เก็บถาวร'}</button>
-      {!hasHistory && current.wallets.get(w.id) === 0 && <button className="text-button danger" disabled={busy} onClick={() => {
-        if (confirm(`ลบกระเป๋า “${w.name}” ใช่ไหม?`)) void save({...data,wallets:data.wallets.filter(x => x.id !== w.id)});
-      }}>ลบ</button>}
+      <button className="text-button danger" disabled={busy} onClick={() => {
+        if (confirm(`ลบกระเป๋า “${w.name}” ใช่ไหม?\nยอด ${money(current.wallets.get(w.id) ?? 0)} และรายการจะย้ายไปที่${unallocated} การย้ายเงินที่กลายเป็นต้นทางและปลายทางเดียวกันจะถูกลบ`)) {
+          void save(removeWallet(data,w.id));
+        }
+      }}><Trash2 size={15}/> ลบกระเป๋า</button>
     </>;
   }
   return <div className="account-page">

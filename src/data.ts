@@ -61,6 +61,27 @@ export function totals(entries:Entry[]) {
 }
 
 export const sameLocation = (a:Location,b:Location) => a.accountId === b.accountId && a.walletId === b.walletId;
+export function removeAccount(data:Data, accountId:string):Data {
+  return {
+    ...data,
+    accounts:data.accounts.filter(a => a.id !== accountId),
+    wallets:data.wallets.filter(w => w.accountId !== accountId),
+    entries:data.entries.map(e => e.accountId === accountId ? {...e,accountId:undefined,walletId:undefined} : e),
+    transfers:data.transfers.filter(t => t.from.accountId !== accountId && t.to.accountId !== accountId),
+  };
+}
+
+export function removeWallet(data:Data, walletId:string):Data {
+  const unassign = (place:Location):Location => place.walletId === walletId ? {accountId:place.accountId} : place;
+  return {
+    ...data,
+    wallets:data.wallets.filter(w => w.id !== walletId),
+    entries:data.entries.map(e => e.walletId === walletId ? {...e,walletId:undefined} : e),
+    transfers:data.transfers.map(t => ({...t,from:unassign(t.from),to:unassign(t.to)}))
+      .filter(t => !sameLocation(t.from,t.to)),
+  };
+}
+
 export function locationLabel(data:Data, location?:Location) {
   if (!location) return legacyLabel;
   const account = data.accounts.find(a => a.id === location.accountId);

@@ -1,7 +1,7 @@
 ﻿import 'fake-indexeddb/auto';
 import {openDB} from 'idb';
 import {describe,expect,it} from 'vitest';
-import {balances, cents, csv, initial, mergeData, readData, totals, validate, writeData, type Data, type Entry, type Transfer} from './data';
+import {balances, cents, csv, initial, mergeData, readData, removeAccount, removeWallet, totals, validate, writeData, type Data, type Entry, type Transfer} from './data';
 
 const base = ():Data => ({
   ...structuredClone(initial),
@@ -21,6 +21,25 @@ const expense:Entry = {...movement,...food,id:'expense',type:'expense',categoryI
 const fixture = ():Data => ({...base(),transfers:[allocation,transfer],entries:[expense]});
 
 describe('บัญชี กระเป๋า และรายงาน', () => {
+  it('ลบกระเป๋าที่มียอดโดยคืนยอดไปยังบัญชีและรักษาการโอนข้ามบัญชี', () => {
+    const data = validate({...fixture(),transfers:[allocation,{...transfer,from:food}]});
+    const next = validate(removeWallet(data,food.walletId));
+    expect(next.wallets).toEqual([]);
+    expect(next.entries).toStrictEqual([{...movement,id:'expense',accountId:'a',type:'expense',categoryId:'food',amount:7500}]);
+    expect(next.transfers).toEqual([transfer]);
+    expect(balances(next).accounts).toEqual(balances(data).accounts);
+    expect(balances(next).at(unallocated)).toBe(72500);
+  });
+  it('ลบบัญชีพร้อมกระเป๋าและการโอนที่เกี่ยวข้อง โดยเก็บรายจ่ายในรายงาน', () => {
+    const data = validate(fixture());
+    const next = validate(removeAccount(data,unallocated.accountId));
+    expect(next.accounts).toEqual([data.accounts[1]]);
+    expect(next.wallets).toEqual([]);
+    expect(next.transfers).toEqual([]);
+    expect(next.entries).toStrictEqual([{...movement,id:'expense',type:'expense',categoryId:'food',amount:7500}]);
+    expect(totals(next.entries)).toEqual(totals(data.entries));
+    expect(balances(next).at(savings)).toBe(20000);
+  });
   it('ยอดตั้งต้นไม่ก่อให้เกิดรายรับ และตรวจสอบทศนิยมและขอบเขต', () => {
     const data = validate(base());
     expect(totals(data.entries)).toEqual({income:0,expense:0});
