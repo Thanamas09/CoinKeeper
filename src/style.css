@@ -85,3 +85,17 @@ th{font-size:.85rem;color:var(--muted);font-weight:650}
   .table-footer{flex-wrap:wrap;gap:4px}
 }
 @media(max-width:430px){.planner-fields{grid-template-columns:1fr;gap:0}}
+
+.month-picker input.month-input{position:static;opacity:1;width:auto;padding:4px 6px;border:0;font-size:.9rem}
+.actual-toggle{display:block;padding:0;text-align:left}
+.report-difference strong{font-size:clamp(1rem,2vw,1.5rem)}
+.report-entries .table-wrap{margin-top:12px}
+.report-entries th:nth-child(3),.report-entries td:nth-child(3){display:table-cell}
+@media(max-width:680px){.report-difference{grid-column:1/-1}}
+.actual-toggle + .secondary{white-space:normal;text-align:center}
+.account-budgets{margin-top:22px}
+.account-budgets .panel-heading{flex-wrap:wrap;margin-bottom:12px}
+.account-budgets .panel-heading p{margin:4px 0 0}
+.account-budgets tbody th{background:var(--surface);color:inherit;border-block:0;border-bottom:1px solid var(--border);font-size:inherit}
+.account-budgets input{width:9rem;text-align:right}
+.account-budgets th:nth-child(3),.account-budgets td:nth-child(3){display:table-cell}

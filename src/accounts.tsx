@@ -152,6 +152,8 @@ export function AccountsPage({data,save,ready,busy,openEntry,openTransfer}:{data
           wallets.length ? `กระเป๋าย่อย ${wallets.length} ใบจะถูกลบด้วย` : '',
           entries.length ? `รายรับและรายจ่าย ${entries.length} รายการจะยังอยู่ในรายงาน แต่จะถูกยกเลิกการผูกบัญชี` : '',
           transfers.length ? `ประวัติโอนและย้ายเงิน ${transfers.length} รายการจะถูกลบ ซึ่งอาจเปลี่ยนยอดบัญชีอื่น` : '',
+          Object.values(data.accountBudgets ?? {}).some(allocations => Object.hasOwn(allocations,a.id))
+            ? 'งบที่แบ่งให้บัญชีนี้จะกลับไปเป็นงบที่ยังไม่ได้แบ่ง' : '',
         ].filter(Boolean);
         if (confirm([`ลบบัญชี “${a.name}” ใช่ไหม?`, ...details].join('\n'))
           && await save(removeAccount(data,a.id))) setSelected(value => value === a.id ? '' : value);

@@ -10,6 +10,7 @@ export type Entry = Movement & {categoryId:string; type:Kind; description?:strin
 export type Transfer = Movement & {from:Location; to:Location};
 export type Data = {
   version:2; categories:Category[]; entries:Entry[]; budgets:Record<string,number>;
+  accountBudgets?:Record<string,Record<string,number>>;
   accounts:Account[]; wallets:Pocket[]; transfers:Transfer[];
 };
 
@@ -36,7 +37,7 @@ export function cents(value:string, allowZero = false) {
   const [whole, fraction=''] = value.split('.');
   const n = Number(whole)*100 + Number(fraction.padEnd(2,'0'));
   if (!validAmount(n, allowZero ? 0 : 1)) throw Error(allowZero
-    ? 'ยอดตั้งต้นต้องอยู่ระหว่าง 0 ถึง 1,000,000,000 บาท'
+    ? 'จำนวนเงินต้องอยู่ระหว่าง 0 ถึง 1,000,000,000 บาท'
     : 'จำนวนเงินต้องมากกว่า 0 และไม่เกิน 1,000,000,000 บาท');
   return n;
 }
@@ -62,12 +63,21 @@ export function totals(entries:Entry[]) {
 
 export const sameLocation = (a:Location,b:Location) => a.accountId === b.accountId && a.walletId === b.walletId;
 export function removeAccount(data:Data, accountId:string):Data {
+  const accountBudgets = {...data.accountBudgets};
+  for (const [month, allocations] of Object.entries(accountBudgets)) {
+    if (!Object.hasOwn(allocations,accountId)) continue;
+    const next = {...allocations};
+    delete next[accountId];
+    if (Object.keys(next).length) accountBudgets[month] = next;
+    else delete accountBudgets[month];
+  }
   return {
     ...data,
     accounts:data.accounts.filter(a => a.id !== accountId),
     wallets:data.wallets.filter(w => w.accountId !== accountId),
     entries:data.entries.map(e => e.accountId === accountId ? {...e,accountId:undefined,walletId:undefined} : e),
     transfers:data.transfers.filter(t => t.from.accountId !== accountId && t.to.accountId !== accountId),
+    ...(data.accountBudgets ? {accountBudgets} : {}),
   };
 }
 
@@ -162,8 +172,22 @@ export function validate(raw:unknown):Data {
     && isKind(e.type) && categoryMap.get(e.categoryId)?.type === e.type
     && (e.accountId === undefined ? e.walletId === undefined : validLocation({accountId:e.accountId,walletId:e.walletId})));
   index(transfers,t => validMovement(t) && validLocation(t.from) && validLocation(t.to) && !sameLocation(t.from,t.to));
-  for (const [k,v] of Object.entries(budgets)) if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(k) || !validAmount(v)) invalid();
-  const result:Data = {version:2,categories,entries,budgets,accounts,wallets,transfers};
+  for (const [k,v] of Object.entries(budgets)) if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(k) || !validAmount(v,0)) invalid();
+  const accountBudgets = legacy ? undefined : source.accountBudgets;
+  if (accountBudgets !== undefined) {
+    if (!accountBudgets || typeof accountBudgets !== 'object' || Array.isArray(accountBudgets)) invalid();
+    for (const [month, allocations] of Object.entries(accountBudgets)) {
+      if (!Object.hasOwn(budgets,month) || !allocations || typeof allocations !== 'object' || Array.isArray(allocations)) invalid();
+      let allocated = 0;
+      for (const [accountId, amount] of Object.entries(allocations)) {
+        if (!accountMap.has(accountId) || !validAmount(amount,0)) invalid();
+        allocated += amount;
+        if (allocated > budgets[month]) throw Error('งบที่แบ่งให้บัญชีรวมกันสูงกว่างบรวมของเดือน กรุณาปรับงบให้สอดคล้องกัน');
+      }
+    }
+  }
+  const result:Data = {version:2,categories,entries,budgets,accounts,wallets,transfers,
+    ...(accountBudgets && Object.keys(accountBudgets).length ? {accountBudgets} : {})};
   const current = balances(result);
   for (const a of accounts) checkFunds(result,{accountId:a.id},current);
   for (const w of wallets) checkFunds(result,{accountId:w.accountId,walletId:w.id},current);
@@ -194,6 +218,9 @@ export function mergeData(current:Data, incoming:Data):Data {
   }
   const wallets = incoming.wallets.map(w => ({...w,categoryId:w.categoryId ? categoryIds.get(w.categoryId) : undefined}));
   const entries = incoming.entries.map(e => ({...e,categoryId:categoryIds.get(e.categoryId)!}));
+  const accountBudgets = {...incoming.accountBudgets};
+  for (const month of Object.keys(current.budgets)) delete accountBudgets[month];
+  Object.assign(accountBudgets,current.accountBudgets);
   return validate({
     version:2,categories,
     accounts:combine(current.accounts,incoming.accounts),
@@ -201,6 +228,7 @@ export function mergeData(current:Data, incoming:Data):Data {
     entries:combine(current.entries,entries),
     transfers:combine(current.transfers,incoming.transfers),
     budgets:{...incoming.budgets,...current.budgets},
+    accountBudgets,
   });
 }
 

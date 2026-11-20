@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "categories": [
+    {"id":"demo-shop-sales","name":"ยอดขายออนไลน์","type":"income"},
+    {"id":"demo-shop-stock","name":"สินค้าและบรรจุภัณฑ์","type":"expense"},
+    {"id":"demo-shop-shipping","name":"จัดส่ง","type":"expense"},
+    {"id":"demo-shop-marketing","name":"การตลาด","type":"expense"}
+  ],
+  "accounts": [
+    {"id":"demo-shop-main","name":"ร้านใบชาสมมติ","color":"#197c63","opening":0,"wallets":false},
+    {"id":"demo-shop-reserve","name":"บัญชีสำรองร้านใบชา","color":"#6c91bd","opening":0,"wallets":false}
+  ],
+  "wallets": [],
+  "budgets": {"2026-11":10000000},
+  "entries": [
+    {"id":"demo-shop-order","amount":16000000,"date":"2026-11-02","note":"","type":"income","categoryId":"demo-shop-sales","description":"รับเงินจากแพลตฟอร์มขายสินค้า","accountId":"demo-shop-main"},
+    {"id":"demo-shop-supplier","amount":8000000,"date":"2026-11-05","note":"","type":"expense","categoryId":"demo-shop-stock","description":"ซื้อใบชาและกล่องบรรจุ","accountId":"demo-shop-main"},
+    {"id":"demo-shop-courier","amount":1500000,"date":"2026-11-12","note":"","type":"expense","categoryId":"demo-shop-shipping","description":"ค่าบริการขนส่งสินค้า","accountId":"demo-shop-main"},
+    {"id":"demo-shop-ads","amount":2000000,"date":"2026-11-18","note":"","type":"expense","categoryId":"demo-shop-marketing","description":"ค่าโฆษณาร้านออนไลน์","accountId":"demo-shop-main"}
+  ],
+  "transfers": [
+    {"id":"demo-shop-transfer","amount":1000000,"date":"2026-11-19","note":"กันเงินเข้าบัญชีสำรอง","from":{"accountId":"demo-shop-main"},"to":{"accountId":"demo-shop-reserve"}}
+  ]
+}
