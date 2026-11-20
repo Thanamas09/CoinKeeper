@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "categories": [
+    {"id":"demo-student-allowance","name":"เงินจากครอบครัว","type":"income"},
+    {"id":"demo-student-tutoring","name":"สอนพิเศษ","type":"income"},
+    {"id":"demo-student-housing","name":"ค่าที่พัก","type":"expense"},
+    {"id":"demo-student-food","name":"อาหาร","type":"expense"},
+    {"id":"demo-student-transit","name":"เดินทาง","type":"expense"},
+    {"id":"demo-student-study","name":"ค่าใช้จ่ายการเรียน","type":"expense"}
+  ],
+  "accounts": [
+    {"id":"demo-student-main","name":"บัญชีค่าใช้จ่ายประจำวัน","color":"#197c63","opening":0,"wallets":false},
+    {"id":"demo-student-study-account","name":"บัญชีค่าเรียนและอุปกรณ์","color":"#6c91bd","opening":0,"wallets":false}
+  ],
+  "wallets": [],
+  "budgets": {"2026-11":1000000},
+  "accountBudgets": {"2026-11":{"demo-student-main":800000,"demo-student-study-account":150000}},
+  "entries": [
+    {"id":"demo-student-monthly-allowance","amount":1300000,"date":"2026-11-01","note":"","type":"income","categoryId":"demo-student-allowance","description":"เงินใช้จ่ายรายเดือนจากครอบครัว","accountId":"demo-student-main"},
+    {"id":"demo-student-rent","amount":650000,"date":"2026-11-03","note":"","type":"expense","categoryId":"demo-student-housing","description":"ค่าหอพักใกล้สามย่าน","accountId":"demo-student-main"},
+    {"id":"demo-student-meals-first","amount":170000,"date":"2026-11-08","note":"สรุปยอดตามช่วง","type":"expense","categoryId":"demo-student-food","description":"ค่าอาหารโรงอาหารและมื้อเย็นช่วงเปิดเดือน","accountId":"demo-student-main"},
+    {"id":"demo-student-travel","amount":70000,"date":"2026-11-10","note":"","type":"expense","categoryId":"demo-student-transit","description":"เติมเงินบัตร BTS และค่าเดินทางไปเรียน","accountId":"demo-student-main"},
+    {"id":"demo-student-materials","amount":110000,"date":"2026-11-12","note":"","type":"expense","categoryId":"demo-student-study","description":"หนังสือ พิมพ์ชีท และอุปกรณ์ทำโปรเจกต์","accountId":"demo-student-study-account"},
+    {"id":"demo-student-tutoring-pay","amount":200000,"date":"2026-11-15","note":"","type":"income","categoryId":"demo-student-tutoring","description":"ค่าสอนพิเศษช่วงสุดสัปดาห์","accountId":"demo-student-main"},
+    {"id":"demo-student-meals-second","amount":150000,"date":"2026-11-19","note":"สรุปยอดตามช่วง","type":"expense","categoryId":"demo-student-food","description":"ค่าอาหารช่วงกลางเดือน","accountId":"demo-student-main"}
+  ],
+  "transfers": [
+    {"id":"demo-student-transfer","amount":200000,"date":"2026-11-02","note":"กันเงินเข้าบัญชีค่าเรียนและอุปกรณ์","from":{"accountId":"demo-student-main"},"to":{"accountId":"demo-student-study-account"}}
+  ]
+}

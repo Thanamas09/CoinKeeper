@@ -35,12 +35,12 @@ function Dialog({title,close,error,children}:{title:string;close:()=>void;error:
 
 type Save = (next:Data,onError?:(message:string)=>void)=>Promise<boolean>;
 
-export function TransferForm({data,item,source,close,save,busy,error,setError}:{data:Data;item?:Transfer;source?:Location;
+export function TransferForm({data,item,source,defaultDate,close,save,busy,error,setError}:{data:Data;item?:Transfer;source?:Location;defaultDate?:string;
   close:()=>void;save:Save;busy:boolean;error:string;setError:(s:string)=>void}) {
   const [from,setFrom] = useState(item?.from ?? source);
   const [to,setTo] = useState(item?.to);
   const [amount,setAmount] = useState(item ? decimal(item.amount) : '');
-  const [date,setDate] = useState(item?.date ?? today());
+  const [date,setDate] = useState(item?.date ?? defaultDate ?? today());
   const [note,setNote] = useState(item?.note ?? '');
   const available = balances(data);
   const sourceBalance = from ? available.at(from) + (item && sameLocation(item.from,from) ? item.amount : 0)

@@ -107,8 +107,10 @@ function AccountBudgets({data, month, entries, busy, save, showEntries}: {
   </section>;
 }
 
-export function BudgetReport({data, busy = false, save}: {data: Data; busy?: boolean; save?: Save}) {
-  const [month, setMonth] = useState(() => today().slice(0, 7));
+export function BudgetReport({data, busy = false, save, initialMonth}: {
+  data: Data; busy?: boolean; save?: Save; initialMonth?: string;
+}) {
+  const [month, setMonth] = useState(() => initialMonth ?? today().slice(0, 7));
   const [scope, setScope] = useState<{accountId?: string | null} | null>(null);
   const {budget, actual, difference, percent, entries} = budgetReport(data, month);
   const expanded = scope !== null && scope.accountId === undefined;

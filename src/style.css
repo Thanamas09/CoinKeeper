@@ -99,3 +99,7 @@ th{font-size:.85rem;color:var(--muted);font-weight:650}
 .account-budgets tbody th{background:var(--surface);color:inherit;border-block:0;border-bottom:1px solid var(--border);font-size:inherit}
 .account-budgets input{width:9rem;text-align:right}
 .account-budgets th:nth-child(3),.account-budgets td:nth-child(3){display:table-cell}
+.demo-toggle{white-space:nowrap}
+.demo-banner{display:flex;flex-wrap:wrap;gap:6px 16px;padding:12px 16px;margin-bottom:20px;background:var(--soft);border:1px solid var(--border);border-radius:9px}
+.demo-banner span{color:var(--muted);font-size:.9rem}
+@media(max-width:550px){.header-actions .local-badge{display:none}.header-actions .demo-toggle{padding:6px 10px}}
