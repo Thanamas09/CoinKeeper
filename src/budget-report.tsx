@@ -29,7 +29,7 @@ function ExpenseList({data, entries}: {data: Data; entries: Entry[]}) {
       <span>{dateLabel(entry.date)} · {data.categories.find(category => category.id === entry.categoryId)?.name ?? 'ไม่ระบุหมวด'}
         {' · '}{locationLabel(data, entry.accountId ? {accountId: entry.accountId, walletId: entry.walletId} : undefined)}</span>
     </div>
-    <b>{money(entry.amount)}</b>
+    <b className="expense">{money(entry.amount)}</b>
   </li>)}</ul>;
 }
 
@@ -49,7 +49,7 @@ function AccountExpenses({data, entries}: {data: Data; entries: Entry[]}) {
         <ChevronDown size={16} aria-hidden="true"/>
         <span>{data.categories.find(item => item.id === id)?.name ?? 'ไม่ระบุหมวด'}
           <small>ดู {category.entries.length} รายการ</small></span>
-        <b>{money(category.total)}</b>
+        <b className="expense">{money(category.total)}</b>
       </summary>
       <ExpenseList data={data} entries={category.entries}/>
     </details>)}
@@ -154,7 +154,7 @@ function AccountBudgets({data, month, byAccount, busy, save, jump}: {
                   disabled={busy} aria-label={`งบสำหรับ ${name} (บาท)`}
                   onChange={event => setDraft({...draft, [id]: event.target.value})}/>
                   : allocation === undefined ? '—' : money(allocation)}</td>
-              <td className="right" role="cell"><span className="account-mobile-label" aria-hidden="true">จ่ายจริง</span><b>{money(actual)}</b></td>
+              <td className="right" role="cell"><span className="account-mobile-label" aria-hidden="true">จ่ายจริง</span><b className="expense">{money(actual)}</b></td>
               <td className="right" role="cell"><span className="account-mobile-label" aria-hidden="true">เทียบกับงบ</span>
                 {id === null ? '—' : <BudgetComparison budget={allocation} actual={actual}/>}</td>
             </tr>
@@ -224,19 +224,19 @@ export function BudgetReport({data, busy = false, save, initialMonth, onSetBudge
       </button>}
     </section>
     <section className="summary" aria-label="สรุปงบเทียบยอดจ่ายจริง">
-      <div className="stat">
-        <div className="stat-top">งบค่าใช้จ่ายรวม<span className="stat-icon green"><Wallet size={21}/></span></div>
+      <div className="stat stat-budget">
+        <div className="stat-top">งบค่าใช้จ่ายรวม<span className="stat-icon"><Wallet size={21}/></span></div>
         {budget === undefined ? <p>ยังไม่ได้ตั้งงบ</p> : <strong>{money(budget)}</strong>}
       </div>
-      <div className="stat">
-        <div className="stat-top">ยอดจ่ายจริง<span className="stat-icon green"><ArrowUpRight size={21}/></span></div>
+      <div className="stat stat-expense">
+        <div className="stat-top">ยอดจ่ายจริง<span className="stat-icon red"><ArrowUpRight size={21}/></span></div>
         <button className="actual-toggle" aria-label={`ยอดจ่ายจริง ${money(actual)}`} aria-controls="actual-entries"
           aria-expanded={expanded} onClick={() => setExpanded(!expanded)}><strong>{money(actual)}</strong></button>
         <button className="report-entry-toggle" aria-controls="actual-entries" aria-expanded={expanded}
           onClick={() => setExpanded(!expanded)}>{expanded ? 'ซ่อนรายการที่รวมในยอดจริง' : 'ดูรายการที่รวมในยอดจริง'} <ChevronDown size={14} aria-hidden="true"/></button>
       </div>
       <div className="stat report-difference" aria-live="polite">
-        <div className="stat-top">ผลต่างจากงบ<span className="stat-icon green"><ChartPie size={21}/></span></div>
+        <div className="stat-top">ผลต่างจากงบ<span className="stat-icon budget-icon"><ChartPie size={21}/></span></div>
         {difference === undefined ? <p>{status}</p> : <>
           <strong className={difference > 0 ? 'report-over' : 'report-green'}>
             {status} {differenceBaht.format(Math.abs(difference) / 100)} บาท{rate}
@@ -251,7 +251,7 @@ export function BudgetReport({data, busy = false, save, initialMonth, onSetBudge
         <span className="help">{entries.length} รายการ</span>
       </div>
       {expanded && (entries.length ? <ExpenseList data={data} entries={entries}/> : <p className="help">ไม่มีรายการค่าใช้จ่ายในเดือนนี้</p>)}
-      <div className="table-footer"><span>ยอดรวมรายการ</span><b>{money(actual)}</b></div>
+      <div className="table-footer"><span>ยอดรวมรายการ</span><b className="expense">{money(actual)}</b></div>
     </section>
     <AccountBudgets key={month} data={data} month={month} byAccount={byAccount} busy={busy} save={save} jump={jump}/>
   </div>;

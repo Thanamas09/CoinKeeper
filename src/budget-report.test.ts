@@ -6,7 +6,7 @@ import demo from '../demo/chula-student-november-2026.json';
 import {BudgetReport, budgetReport} from './budget-report';
 import {cents, initial, mergeData, readData, removeAccount, validate, writeData} from './data';
 
-describe('Budget vs. Actual', () => {
+describe('Budget vs Actual', () => {
   const month = '2026-11';
   const data = mergeData(initial, validate(demo));
   const allocations = demo.accountBudgets;
