@@ -87,18 +87,79 @@ th{font-size:.85rem;color:var(--muted);font-weight:650}
 @media(max-width:430px){.planner-fields{grid-template-columns:1fr;gap:0}}
 
 .month-picker input.month-input{position:static;opacity:1;width:auto;padding:4px 6px;border:0;font-size:.9rem}
-.actual-toggle{display:block;padding:0;text-align:left}
-.report-difference strong{font-size:clamp(1rem,2vw,1.5rem)}
-.report-entries .table-wrap{margin-top:12px}
-.report-entries th:nth-child(3),.report-entries td:nth-child(3){display:table-cell}
-@media(max-width:680px){.report-difference{grid-column:1/-1}}
-.actual-toggle + .secondary{white-space:normal;text-align:center}
-.account-budgets{margin-top:22px}
+.budget-report{--report-over:#a33430;--report-fill:#34836c;--report-track:#e1ebe5}
+.dark .budget-report{--report-over:#ffaaa1;--report-fill:#79c6a7;--report-track:#33483e}
+.report-over{color:var(--report-over)}
+.report-green{color:var(--green)}
+.report-muted{color:var(--muted)}
+.report-overview{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding:16px 20px;background:var(--soft);border:1px solid var(--border);border-radius:12px}
+.report-overview-icon{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:10px;background:var(--surface);color:var(--green)}
+.report-overview-copy{flex:1;min-width:0}
+.report-overview h2{font-size:1.13rem}
+.report-overview p{margin:4px 0 0;color:var(--muted);overflow-wrap:anywhere}
+.budget-report .summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.budget-report .stat-top{color:var(--muted);gap:6px}
+.budget-report .stat-icon{flex:none}
+.budget-report .stat strong{margin:8px 0 5px;font-size:clamp(1.15rem,2.2vw,1.85rem);overflow-wrap:anywhere}
+.budget-report .report-difference strong{font-size:clamp(1.1rem,1.65vw,1.4rem)}
+.budget-report .stat p{color:var(--muted);margin:10px 0}
+.actual-toggle{display:block;padding:0;text-align:left;max-width:100%}
+.report-entry-toggle{display:flex;align-items:center;gap:5px;color:var(--green);font-size:.83rem;text-align:left;padding:5px 0}
+.report-entry-toggle svg{flex:none}
+.report-entry-toggle[aria-expanded=true] svg,.account-disclosure[aria-expanded=true] svg,.account-report-details details[open]>summary svg{transform:rotate(180deg)}
+.report-entries,.account-budgets{margin-top:16px}
+.report-entries .table-footer{padding:12px 0 0}
 .account-budgets .panel-heading{flex-wrap:wrap;margin-bottom:12px}
 .account-budgets .panel-heading p{margin:4px 0 0}
-.account-budgets tbody th{background:var(--surface);color:inherit;border-block:0;border-bottom:1px solid var(--border);font-size:inherit}
-.account-budgets input{width:9rem;text-align:right}
-.account-budgets th:nth-child(3),.account-budgets td:nth-child(3){display:table-cell}
+.account-report-table{table-layout:fixed;white-space:normal;font-variant-numeric:tabular-nums}
+.account-report-table col:first-child{width:34%}
+.account-report-table .comparison-column{width:30%}
+.account-report-table th,.account-report-table td{padding:12px 10px;overflow-wrap:anywhere}
+.account-report-table thead th{color:var(--muted);font-size:.83rem;font-weight:600}
+.account-report-table tbody th{background:transparent;color:inherit;border-block:0;border-bottom:1px solid var(--border)}
+.account-report-table td{color:inherit}
+.account-report-table :is(th,td):nth-child(3){display:table-cell}
+.account-report-row{cursor:pointer;scroll-margin-block-start:16px}
+.account-report-row:hover,.account-report-row:focus-within{background:var(--soft)}
+.account-disclosure{display:flex;align-items:center;gap:6px;padding:5px 0;text-align:left;font-weight:650;font-size:.94rem;max-width:100%;overflow-wrap:anywhere}
+.account-disclosure svg{flex:none;color:var(--green)}
+.account-report-table input{width:100%;max-width:9rem;text-align:right;padding:6px}
+.account-mobile-label{display:none}
+.budget-track{position:relative;background:var(--report-track);height:7px;border-radius:6px;margin:7px 2px 2px}
+.budget-track span{display:block;background:var(--report-fill);height:100%;border-radius:inherit}
+.budget-track .over{background:var(--report-over)}
+.budget-track i,.budget-track-key i{width:2px;height:13px;background:currentColor;border-radius:2px}
+.budget-track i{position:absolute;top:-3px;transform:translateX(-50%);box-shadow:0 0 0 1px var(--surface)}
+.budget-track-key{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin:10px 0 0}
+.account-report-details td{background:var(--soft);padding:14px 18px}
+.account-report-details h3,.account-report-details p{margin:0}
+.account-report-details details{border-top:1px solid var(--border);margin-top:6px}
+.account-report-details summary{display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;list-style:none;font-size:.93rem}
+.account-report-details summary::-webkit-details-marker{display:none}
+.account-report-details summary:focus-visible{outline:3px solid #5db99c;outline-offset:2px;border-radius:4px}
+.account-report-details summary svg{flex:none;color:var(--green)}
+.account-report-details summary span{flex:1;min-width:0}
+.account-report-details summary small{display:block;color:var(--muted)}
+.account-report-details summary b{text-align:right}
+.report-expenses{list-style:none;padding:0;margin:8px 0;font-size:.9rem;font-variant-numeric:tabular-nums}
+.report-expenses li{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--border);overflow-wrap:anywhere}
+.report-expenses li span{display:block;color:var(--muted);font-size:.83rem}
+.report-expenses li b{text-align:right}
+@media(max-width:760px){
+  .budget-report .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .report-difference{grid-column:1/-1}
+  .report-overview{flex-wrap:wrap;padding:14px}
+  .report-overview-copy{flex-basis:calc(100% - 54px)}
+  .report-overview .secondary{margin-left:54px}
+  .account-report-table,.account-report-table tbody,.account-report-details:not([hidden]),.account-report-details td{display:block}
+  .account-report-table colgroup{display:none}
+  .account-report-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .account-report-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) minmax(0,1.24fr);border-top:1px solid var(--border);padding:8px 0}
+  .account-report-table tbody th{grid-column:1/-1;border:0;padding:0 4px}
+  .account-report-row td{padding:4px;border:0;font-size:.84rem}
+  .account-mobile-label{display:block;color:var(--muted);font-size:.77rem;margin-bottom:3px}
+  .account-report-details td{padding:12px}
+}
 .demo-toggle{white-space:nowrap}
 .demo-banner{display:flex;flex-wrap:wrap;gap:6px 16px;padding:12px 16px;margin-bottom:20px;background:var(--soft);border:1px solid var(--border);border-radius:9px}
 .demo-banner span{color:var(--muted);font-size:.9rem}
