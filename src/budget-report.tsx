@@ -127,7 +127,7 @@ function AccountBudgets({data, month, byAccount, busy, save, jump}: {
           setDraft(Object.fromEntries(Object.entries(allocations).map(([id, amount]) => [id, (amount / 100).toFixed(2)])));
         }}>แบ่งงบให้บัญชี</button>}
     </div>
-    {budget === undefined && <p className="help">ตั้งงบรวมของเดือนนี้ในหน้า งบประมาณ เพื่อเริ่มแบ่งงบให้บัญชี</p>}
+    {budget === undefined && <p className="help">ตั้งงบรวมของเดือนนี้เพื่อเริ่มแบ่งงบให้บัญชี</p>}
     {!accounts.some(account => account.id !== null) && <p className="help">เพิ่มบัญชีในหน้า บัญชีและกระเป๋า เพื่อแบ่งงบ</p>}
     {draft && <p className="help">กรอกงบเป็นบาท ยอดรวมต้องอยู่ในงบเดือนนี้ เว้นช่องว่างเพื่อล้างงบของบัญชี</p>}
     <form onSubmit={submit}>
@@ -219,8 +219,8 @@ export function BudgetReport({data, busy = false, save, initialMonth, onSetBudge
       {highestOverage && <button type="button" className="secondary" onClick={() => setJump({id: highestOverage.id})}>
         ดูรายการบัญชีนี้ <ArrowDown size={16} aria-hidden="true"/>
       </button>}
-      {budget === undefined && onSetBudget && <button type="button" className="secondary" onClick={() => onSetBudget(month)}>
-        ตั้งงบประมาณ
+      {onSetBudget && <button type="button" className="secondary" disabled={busy} onClick={() => onSetBudget(month)}>
+        {budget === undefined ? 'ตั้งงบประมาณ' : 'แก้ไขงบประมาณ'}
       </button>}
     </section>
     <section className="summary" aria-label="สรุปงบเทียบยอดจ่ายจริง">

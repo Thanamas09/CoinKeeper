@@ -1,6 +1,6 @@
 import {useState, type FormEvent, type ReactNode} from 'react';
 import {ArrowRightLeft, Plus, Trash2, Wallet, X} from 'lucide-react';
-import {balances, cents, dateLabel, decimal, legacyLabel, locationLabel, money, removeAccount, removeWallet, sameLocation, today, unallocated,
+import {balances, cents, dateLabel, decimal, legacyLabel, locationLabel, money, removeAccount, removeWallet, sameLocation, setAccountBalance, today, unallocated,
   type Account, type Data, type Entry, type Location, type Pocket, type Transfer} from './data';
 
 export function LocationFields({data,value,onChange,label='บัญชี',allowed,required=true}:{data:Data;value?:Location;
@@ -73,9 +73,11 @@ export function TransferForm({data,item,source,defaultDate,close,save,busy,error
   </Dialog>;
 }
 
-function AccountForm({item,canDisable,commit}:{item?:Account;canDisable:boolean;commit:(a:Account)=>void}) {
+function AccountForm({item,currentBalance,canDisable,commit}:{item?:Account;currentBalance:number;canDisable:boolean;commit:(a:Account,target?:number)=>void}) {
   const [name,setName] = useState(item?.name ?? '');
   const [color,setColor] = useState(item?.color ?? '#207d67');
+  const [reset,setReset] = useState(false);
+  const [target,setTarget] = useState(decimal(currentBalance));
   const [opening,setOpening] = useState(decimal(item?.opening ?? 0));
   const [wallets,setWallets] = useState(item?.wallets ?? false);
   const [error,setError] = useState('');
@@ -83,14 +85,20 @@ function AccountForm({item,canDisable,commit}:{item?:Account;canDisable:boolean;
     e.preventDefault();
     try {
       if (!name.trim()) throw Error('กรุณาระบุชื่อบัญชี');
-      commit({...item,id:item?.id ?? crypto.randomUUID(),name:name.trim(),color,opening:cents(opening,true),wallets});
+      commit({...item,id:item?.id ?? crypto.randomUUID(),name:name.trim(),color,opening:reset && item ? item.opening : cents(opening,true),wallets},reset && item ? cents(target,true) : undefined);
     } catch (e) {setError((e as Error).message)}
   }}>
     {error && <p className="error" role="alert">{error}</p>}
     <label className="field">ชื่อบัญชี<input autoFocus required maxLength={60} value={name} onChange={e => setName(e.target.value)}/></label>
     <label className="field">สีบัญชี<input type="color" value={color} onChange={e => setColor(e.target.value)}/></label>
+    {item && <label className="radio"><input type="checkbox" checked={reset} onChange={e => setReset(e.target.checked)}/> ตั้งยอดบัญชีใหม่จากยอดเงินจริงตอนนี้</label>}
+    {reset ? <>
+      <label className="field">ยอดคงเหลือใหม่ทั้งบัญชี (บาท)<input required inputMode="decimal" value={target} onChange={e => setTarget(e.target.value)}/></label>
+      <p className="help">ยอดปัจจุบัน {money(currentBalance)} หากยอดใหม่ต่ำกว่าเงินในกระเป๋าย่อย ระบบจะคืนเงินจากกระเป๋าย่อยเท่าที่จำเป็น โดยเก็บประวัติรายรับรายจ่ายไว้</p>
+    </> : <>
     <label className="field">ยอดตั้งต้น (บาท)<input required inputMode="decimal" value={opening} onChange={e => setOpening(e.target.value)}/></label>
     <p className="help">ถ้าจะผูกรายการย้อนหลัง ให้ใช้ยอดก่อนรายการแรกที่จะผูก หากเริ่มจากยอดเงินจริงวันนี้ ให้ผูกเฉพาะรายการที่ยังไม่ได้สะท้อนในยอดนั้น เพื่อเลี่ยงการนับซ้ำ</p>
+    </>}
     <label className="radio"><input type="checkbox" checked={wallets} disabled={!canDisable} onChange={e => setWallets(e.target.checked)}/> ใช้กระเป๋าย่อยในบัญชีนี้</label>
     {!canDisable && <p className="help">ลบกระเป๋าย่อยทั้งหมดก่อนปิดการใช้กระเป๋า</p>}
     <button className="primary full">บันทึกบัญชี</button>
@@ -219,9 +227,10 @@ export function AccountsPage({data,save,ready,busy,openEntry,openTransfer}:{data
     </section>}
     {editor && <Dialog title={editor.type === 'account' ? editor.item ? 'แก้ไขบัญชี' : 'เพิ่มบัญชี' : editor.item ? 'แก้ไขกระเป๋า' : 'เพิ่มกระเป๋า'} close={() => setEditor(undefined)} error={formError}>
       {editor.type === 'account'
-        ? <AccountForm item={editor.item} canDisable={!wallets.length || !editor.item} commit={a => {
+        ? <AccountForm item={editor.item} currentBalance={editor.item ? current.accounts.get(editor.item.id) ?? 0 : 0}
+          canDisable={!wallets.length || !editor.item} commit={(a,target) => {
           setSelected(a.id);
-          void commit({...data,accounts:editor.item ? data.accounts.map(x => x.id === a.id ? a : x) : [...data.accounts,a]});
+          void commit(target !== undefined ? setAccountBalance(data,a,target) : {...data,accounts:editor.item ? data.accounts.map(x => x.id === a.id ? a : x) : [...data.accounts,a]});
         }}/>
         : account && <WalletForm data={data} item={editor.item} accountId={account.id} commit={w => {
           if (!w.name || w.name === unallocated) {setFormError('กรุณาระบุชื่อกระเป๋าอื่น');return}

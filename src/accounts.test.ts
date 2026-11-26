@@ -1,7 +1,7 @@
-﻿import 'fake-indexeddb/auto';
+import 'fake-indexeddb/auto';
 import {openDB} from 'idb';
 import {describe,expect,it} from 'vitest';
-import {balances, cents, csv, initial, mergeData, readData, removeAccount, removeWallet, totals, validate, writeData, type Data, type Entry, type Transfer} from './data';
+import {balances, cents, csv, initial, mergeData, readData, removeAccount, removeWallet, setAccountBalance, totals, validate, writeData, type Data, type Entry, type Transfer} from './data';
 
 const base = ():Data => ({
   ...structuredClone(initial),
@@ -39,6 +39,21 @@ describe('บัญชี กระเป๋า และรายงาน', ()
     expect(next.entries).toStrictEqual([{...movement,id:'expense',type:'expense',categoryId:'food',amount:7500}]);
     expect(totals(next.entries)).toEqual(totals(data.entries));
     expect(balances(next).at(savings)).toBe(20000);
+  });
+  it('ตั้งยอดบัญชีใหม่โดยคืนเงินจากกระเป๋าเฉพาะส่วนที่จำเป็นและเก็บรายการเดิม', () => {
+    const data = validate(fixture());
+    const reset = validate(setAccountBalance(data,data.accounts[0],55043));
+    expect(balances(reset).accounts.get('a')).toBe(55043);
+    expect(balances(reset).at(food)).toBe(22500);
+    const lower = validate(setAccountBalance(reset,reset.accounts[0],10000));
+    expect(balances(lower).accounts.get('a')).toBe(10000);
+    expect(balances(lower).at(food)).toBe(10000);
+    expect(balances(lower).at(unallocated)).toBe(0);
+    expect(balances(lower).at(savings)).toBe(40000);
+    expect(lower.entries).toEqual(data.entries);
+    expect(lower.transfers.slice(0,data.transfers.length)).toEqual(data.transfers);
+    const zero = validate(setAccountBalance(lower,lower.accounts[0],0));
+    expect(balances(zero).accounts.get('a')).toBe(0);
   });
   it('ยอดตั้งต้นไม่ก่อให้เกิดรายรับ และตรวจสอบทศนิยมและขอบเขต', () => {
     const data = validate(base());

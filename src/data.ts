@@ -3,7 +3,7 @@ import {openDB} from 'idb';
 export type Kind = 'income' | 'expense';
 export type Category = {id:string; name:string; type:Kind};
 export type Location = {accountId:string; walletId?:string};
-export type Account = {id:string; name:string; color:string; opening:number; wallets:boolean; archived?:boolean};
+export type Account = {id:string; name:string; color:string; opening:number; balanceAdjustment?:number; wallets:boolean; archived?:boolean};
 export type Pocket = {id:string; accountId:string; name:string; categoryId?:string; archived?:boolean};
 type Movement = {id:string; amount:number; date:string; note:string};
 export type Entry = Movement & {categoryId:string; type:Kind; description?:string; accountId?:string; walletId?:string};
@@ -101,7 +101,8 @@ export function locationLabel(data:Data, location?:Location) {
 }
 
 export function balances(data:Data) {
-  const accounts = new Map(data.accounts.map(a => [a.id, a.opening]));
+  const accounts = new Map(data.accounts.map(a => [a.id, a.opening + (a.balanceAdjustment ?? 0)]));
+  if ([...accounts.values()].some(amount => !Number.isSafeInteger(amount))) throw Error('ยอดรวมเกินขอบเขตที่ระบบคำนวณได้อย่างแม่นยำ');
   const available = new Map(accounts);
   const wallets = new Map(data.wallets.map(w => [w.id, 0]));
   function add(map:Map<string,number>, id:string, delta:number) {
@@ -123,6 +124,29 @@ export function balances(data:Data) {
   const total = [...accounts.values()].reduce((sum,n) => sum+n,0);
   if (!Number.isSafeInteger(total)) throw Error('ยอดรวมเกินขอบเขตที่ระบบคำนวณได้อย่างแม่นยำ');
   return {accounts,available,wallets,total, at:(p:Location) => (p.walletId ? wallets.get(p.walletId) : available.get(p.accountId)) ?? 0};
+}
+
+export function setAccountBalance(data:Data, account:Account, target:number):Data {
+  const current = balances(data);
+  const place = {accountId:account.id};
+  const delta = target - (current.accounts.get(account.id) ?? 0);
+  const balanceAdjustment = (account.balanceAdjustment ?? 0) + delta;
+  const transfers = [...data.transfers];
+  let shortfall = Math.max(0,-(current.at(place) + delta));
+  const date = today();
+  for (const wallet of data.wallets) {
+    if (shortfall === 0) break;
+    if (wallet.accountId !== account.id) continue;
+    const from = {...place,walletId:wallet.id};
+    let remaining = Math.min(shortfall,current.at(from));
+    while (remaining > 0) {
+      const amount = Math.min(remaining,maxAmount);
+      transfers.push({id:crypto.randomUUID(),from,to:place,date,amount,note:'คืนเงินเข้าบัญชีเพื่อเริ่มยอดใหม่'});
+      remaining -= amount;
+      shortfall -= amount;
+    }
+  }
+  return {...data,transfers,accounts:data.accounts.map(a => a.id === account.id ? {...account,balanceAdjustment} : a)};
 }
 
 const validId = (id:unknown):id is string => typeof id === 'string' && id.length > 0;
@@ -149,7 +173,7 @@ export function validate(raw:unknown):Data {
   if (![accounts,wallets,transfers].every(Array.isArray) || source.entries.length + transfers.length > 100000) invalid();
   const categoryMap = index(categories,c => validName(c.name) && isKind(c.type));
   const accountMap = index(accounts,a => validName(a.name) && /^#[0-9a-f]{6}$/i.test(a.color)
-    && validAmount(a.opening,0) && typeof a.wallets === 'boolean' && validArchived(a.archived));
+    && validAmount(a.opening,0) && (a.balanceAdjustment === undefined || Number.isSafeInteger(a.balanceAdjustment)) && typeof a.wallets === 'boolean' && validArchived(a.archived));
   const walletMap = index(wallets,w => validName(w.name) && w.name.trim() !== unallocated
     && accountMap.get(w.accountId)?.wallets === true && validArchived(w.archived)
     && (w.categoryId === undefined || categoryMap.has(w.categoryId)));
